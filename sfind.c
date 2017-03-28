@@ -23,18 +23,30 @@ int main(int argc,char** argv){//nome dir -procurar porcurar -fazer
  }
  chdir(argv[1]);
  
- while((dentry=readdir(dir))!=NULL){
+ while((dentry=readdir(dir))!=NULL){ //ABRE OS DIRETORIOS E FAZ EXEC
   stat(dentry->d_name,&estado);
+//  printf("ABRIO %s\n",dentry->d_name);
   if(S_ISDIR(estado.st_mode)){
-   if(!strcmp(dentry->d_name,".")||!strcmp(dentry->d_name,".."))
-    printf("%s\n",dentry->d_name);//SE E DIRETORIO E( . OU ..)
+   if(!strcmp(dentry->d_name,".")||!strcmp(dentry->d_name,"..")){
+    ;
+   }
    else{
-    ////SE E DIRETORIO 
+    ////SE E DIRETORIO
+    if(fork()==0){
+//     printf("dentry %s\n",dentry->d_name);
+     argv[1]=dentry->d_name;
+     execvp(argv[0],argv);
+     printf("ERRO NO EXEC\n");
+     exit(3);
+    }
    }
   }
  }
 
- //CORRER O COMMANDO
+ while((dentry=readdir(dir))!=NULL){ // VE SE E ESTE E CORRE O COMMANDO
+  stat(dentry->d_name,&estado);
+  printf("ABRIO %s\n",dentry->d_name);
+ }
 
  while(wait(NULL)!=-1){//TEM FILHOS
   ;
