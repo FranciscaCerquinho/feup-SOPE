@@ -6,15 +6,38 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <string.h>
+#include <string.h>
+
+#define WRITE 1
+#define READ 0
+#define MAX_LENGTH 1
+
+//CTRL+C
+void sigint_handler(int signo){
+  char r;
+  printf("Are you sure you want to terminate (Y/N)?");
+  scanf("%c",&r);
+  if(r == 'Y' || r=='y'){
+    exit(0);
+  }else if(r == 'N' || r=='n'){
+    exit(5);
+  }
+}
+
 int main(int argc,char** argv){//nome dir -procurar porcurar -fazer
- 
+
  if(argc<5){
   printf("Too few arguments...\n");
   exit(1);
  }
 
+ if(signal(SIGINT,sigint_handler) < 0){
+   fprintf(stderr, "Unable to install SIGNINT handler\n");
+   exit(4);
+ }
+
  DIR *dir;
- struct dirent *dentry; 
+ struct dirent *dentry;
  struct stat estado;
 
  if((dir=opendir(argv[1]))==NULL){
@@ -22,7 +45,7 @@ int main(int argc,char** argv){//nome dir -procurar porcurar -fazer
   exit(2);
  }
  chdir(argv[1]);
- 
+
  while((dentry=readdir(dir))!=NULL){ //ABRE OS DIRETORIOS E FAZ EXEC
   stat(dentry->d_name,&estado);
 //  printf("ABRIO %s\n",dentry->d_name);
