@@ -6,7 +6,9 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <string.h>
-#include <string.h>
+//toupper
+#include <ctype.h>
+#include <xlocale.h>
 
 #define WRITE 1
 #define READ 0
