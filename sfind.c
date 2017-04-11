@@ -20,12 +20,17 @@ void sigint_handler(int signo){
   printf("Are you sure you want to terminate (Y/N)?");
   scanf("%c",&r);
   if(r == 'Y' || r=='y'){
-    exit(0);
+   kill(getpid(), SIGUSR1);
+   exit(0);
   }else if(r == 'N' || r=='n'){
     exit(5);
   }
 }
-
+//SIG-USER1
+void sig_handler(int signo){
+  
+  exit(6);
+}
 int main(int argc,char** argv){//nome dir -procurar porcurar -fazer
 
 
@@ -33,7 +38,7 @@ int main(int argc,char** argv){//nome dir -procurar porcurar -fazer
   printf("Too few arguments...\n");
   exit(1);
  }
-
+/*
  int i;
  int have_to_print=0, have_to_delete=0;
 
@@ -44,7 +49,7 @@ int main(int argc,char** argv){//nome dir -procurar porcurar -fazer
 		have_to_delete=1;
  }
 
-
+*/
 
  if(signal(SIGINT,sigint_handler) < 0){
    fprintf(stderr, "Unable to install SIGNINT handler\n");
@@ -67,6 +72,7 @@ int main(int argc,char** argv){//nome dir -procurar porcurar -fazer
 	  //"." diretorio atual ".." diretorio acima
    if((strcmp(dentry->d_name,".")&&strcmp(dentry->d_name,".."))){
     if(fork()==0){
+     setpgid(getpid(),getpid());
      argv[1]=dentry->d_name;
      execvp(argv[0],argv);
      printf("ERRO NO EXEC\n");
@@ -77,7 +83,7 @@ int main(int argc,char** argv){//nome dir -procurar porcurar -fazer
  }
 
  rewinddir(dir);
-
+/*
  while((dentry=readdir(dir))!=NULL){ // VE SE E ESTE E CORRE O COMMANDO
   stat(dentry->d_name,&estado);
   printf("ABRIU %s\n",dentry->d_name);
@@ -89,9 +95,10 @@ int main(int argc,char** argv){//nome dir -procurar porcurar -fazer
   else if(!strcmp(dentry->d_type, agrv[3]))
 	  printf(dentry->d_type);
   if((estado.st_mode & S_IWOTH)==S_IWOTH)
-
-
- }
+}
+*/
+sleep(50);
+ 
 
  while(wait(NULL)!=-1){//TEM FILHOS
   ;
