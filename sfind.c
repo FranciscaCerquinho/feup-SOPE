@@ -17,7 +17,7 @@
 //CTRL+C
 void sigint_handler(int signo){
   char r;
-  printf("Are you sure you want to terminate (Y/N)?");
+  printf("\nAre you sure you want to terminate (Y/N)?");
   scanf("%c",&r);
   if(r == 'Y' || r=='y'){
    kill(getpid(), SIGUSR1);
@@ -26,30 +26,29 @@ void sigint_handler(int signo){
     exit(5);
   }
 }
+
 //SIG-USER1
 void sig_handler(int signo){
-  
   exit(6);
 }
-int main(int argc,char** argv){//nome dir -procurar porcurar -fazer
 
+int main(int argc,char** argv){//nome dir -procurar porcurar -fazer
 
  if(argc<5){
   printf("Too few arguments...\n");
   exit(1);
  }
-/*
- int i;
- int have_to_print=0, have_to_delete=0;
 
- for(i=0; i < argv->size(); i++){
+ int i;
+ int have_to_print = 0;
+ int have_to_delete = 0;
+
+ for(i=0 ; i < argc ; i++){
 	if(strcmp(argv[i], "-print"))
 		have_to_print=1;
 	else if(strcmp(argv[i], "-delete"))
 		have_to_delete=1;
  }
-
-*/
 
  if(signal(SIGINT,sigint_handler) < 0){
    fprintf(stderr, "Unable to install SIGNINT handler\n");
@@ -66,16 +65,22 @@ int main(int argc,char** argv){//nome dir -procurar porcurar -fazer
  }
  chdir(argv[1]);
 
- while((dentry=readdir(dir))!=NULL){ //ABRE OS DIRETORIOS E FAZ EXEC
-  stat(dentry->d_name,&estado);
+ while((dentry = readdir(dir))!= NULL){ //ABRE OS DIRETORIOS E FAZ EXEC
+  stat(dentry->d_name, &estado);
+
   if(S_ISDIR(estado.st_mode)){
-	  //"." diretorio atual ".." diretorio acima
-   if((strcmp(dentry->d_name,".")&&strcmp(dentry->d_name,".."))){
-    if(fork()==0){
-     setpgid(getpid(),getpid());
-     argv[1]=dentry->d_name;
-     execvp(argv[0],argv);
+
+    //"." diretorio atual ".." diretorio acima
+   if((strcmp(dentry->d_name, ".") && strcmp(dentry->d_name, ".."))){
+    if(fork() == 0){
+     setpgid(getpid(), getpid());
+
+     argv[1] = dentry->d_name;
+
+     execvp(argv[0], argv);
+
      printf("ERRO NO EXEC\n");
+
      exit(3);
     }
    }
@@ -83,25 +88,26 @@ int main(int argc,char** argv){//nome dir -procurar porcurar -fazer
  }
 
  rewinddir(dir);
+
 /*
  while((dentry=readdir(dir))!=NULL){ // VE SE E ESTE E CORRE O COMMANDO
   stat(dentry->d_name,&estado);
   printf("ABRIU %s\n",dentry->d_name);
-  if(!strcmp(dentry->d_name, agrv[3])){
-	  if(have_to_print==1)
-	  printf(dentry->d_name);
-  }
-  stat(dentry->d_type,&estado);
-  else if(!strcmp(dentry->d_type, agrv[3]))
-	  printf(dentry->d_type);
+  if(!strcmp(dentry->d_name, argv[3])){
+	  if(have_to_print == 1)
+	  printf("%s",dentry->d_name);
+  //stat(dentry->d_type,&estado);
+  }else if(!strcmp(dentry->d_type, argv[3])){
+	  printf("%s",dentry->d_type);
   if((estado.st_mode & S_IWOTH)==S_IWOTH)
 }
 */
+
 sleep(50);
- 
 
  while(wait(NULL)!=-1){//TEM FILHOS
   ;
  }
+
  exit(0);
 }
