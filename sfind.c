@@ -28,13 +28,15 @@ int isthat(char * name, char ** argv){
        }else if(have_to_delete == 1){
          remove(name);
        }else if(have_to_exec == 1){
-            printf("ENTERE\n");
-            char cmd[MAX_LENGTH];printf("ENTERE\n");
-            int i=5;printf("ENTERE\n");
-
+            printf("AQUI");
+            char cmd[MAX_LENGTH];            printf("AQUI");
+            int i=5;
+            strcpy(cmd,argv[i]);            printf("AQUI");
+            i++;
+            printf("AQUI");
             while(strcmp(argv[i],";")){
                 printf("H");
-                strcat(cmd, argv[i]);
+                strcat(cmd, argv[i]);i++;
             }
             printf("ENTERE\n");
             printf("|");
