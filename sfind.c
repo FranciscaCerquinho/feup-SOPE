@@ -163,6 +163,7 @@ if(argc<5){
             else if(!strcmp(argv[3],"f")){
                 if (S_ISREG(estado.st_mode))
                     isthat(dentry->d_name,argv);
+                    
             }
             else if(!strcmp(argv[3],"l")){
                 if (S_ISLNK(estado.st_mode))
