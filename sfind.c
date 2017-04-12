@@ -12,31 +12,57 @@
 
 #define WRITE 1
 #define READ 0
-#define MAX_LENGTH 1
+#define MAX_LENGTH 1000
 #define MAX_DIR 100
 
 
- int pid[MAX_DIR];
+int pid[MAX_DIR];
+int have_to_print = 0;
+int have_to_delete = 0;
+int have_to_exec = 0;
 
+int isthat(char * name, char ** argv){
+       if(have_to_print == 1){
+	       char actualpath[MAX_LENGTH];
+     	   printf("%s\n",realpath(name, actualpath));
+       }else if(have_to_delete == 1){
+         remove(name);
+       }else if(have_to_exec == 1){
+            printf("ENTERE\n");
+            char cmd[MAX_LENGTH];printf("ENTERE\n");
+            int i=5;printf("ENTERE\n");
+
+            while(strcmp(argv[i],";")){
+                printf("H");
+                strcat(cmd, argv[i]);
+            }
+            printf("ENTERE\n");
+            printf("|");
+            printf("%s\n",cmd);
+            printf("|");
+       }
+ return 0;
+}
 
 //CTRL+C
 void sigint_handler(int signo){
-  char r;
-  printf("\nAre you sure you want to terminate (Y/N)?");
-  scanf("%c",&r);
-  if(r == 'Y' || r=='y'){
-   printf("ENTREI\n");
-   int i=0;
-   for(;i<MAX_DIR;i++){
-    printf("A");
-    if(kill(pid[i], SIGUSR1)==-1){
-     printf("\n");
-     exit(0);
+    char r;
+    printf("\nAre you sure you want to terminate (Y/N)?");
+    scanf("%c",&r);
+    if(r == 'Y' || r=='y'){
+        printf("ENTREI\n");
+        int i=0;
+        for(;i<MAX_DIR;i++){
+            printf("A");
+            if(kill(pid[i], SIGUSR1)==-1){
+                printf("\n");
+                exit(0);
+            }
+        }
+        exit(0);
+    }else if(r == 'N' || r=='n'){
+        exit(5);
     }
-  } exit(0);
-  }else if(r == 'N' || r=='n'){
-    exit(5);
-  }
 }
 
 //SIG-USER1
@@ -52,21 +78,28 @@ int i=0;
 
 int main(int argc,char** argv){//nome dir -procurar porcurar -fazer
 
- if(argc<5){
-  printf("Too few arguments...\n");
-  exit(1);
- }
+if(argc<5){
+      printf("Too few arguments...\n");
+      exit(1);
+}
 
  int i;
- int have_to_print = 0;
- int have_to_delete = 0;
 
- for(i=0 ; i < argc ; i++){
-	if(strcmp(argv[i], "-print"))
+
+
+	if(!strcmp(argv[4], "-print"))
 		have_to_print=1;
-	else if(strcmp(argv[i], "-delete"))
+	else
+	    have_to_print=0;
+	if(!strcmp(argv[4], "-delete"))
 		have_to_delete=1;
- }
+    else
+        have_to_delete=0;
+    if(!strcmp(argv[4], "-exec"))
+        have_to_exec=1;
+    else
+        have_to_exec=0;
+
 
  if(signal(SIGINT,sigint_handler) < 0){
    fprintf(stderr, "Unable to install SIGNINT handler\n");
@@ -85,53 +118,60 @@ int main(int argc,char** argv){//nome dir -procurar porcurar -fazer
   printf("Nao consigo abrir o diretório %s",argv[1]);
   exit(2);
  }
+
  chdir(argv[1]);
-i=0;
+
+ i=0;
  while((dentry = readdir(dir))!= NULL){ //ABRE OS DIRETORIOS E FAZ EXEC
-  stat(dentry->d_name, &estado);
-
-  if(S_ISDIR(estado.st_mode)){
-    //"." diretorio atual ".." diretorio acima
-   if((strcmp(dentry->d_name, ".") && strcmp(dentry->d_name, ".."))){
-    if((pid[i]=fork()) == 0){
-     setpgid(getpid(), getpid());
-
-     argv[1] = dentry->d_name;
-
-     execvp(argv[0], argv);
-
-     printf("ERRO NO EXEC\n");
-
-     exit(3);
-    }else{
-    i++;
-    if(i>=MAX_DIR){
-    printf("DEMASIADOS DIRETIRIOS\n");
-    exit(9);
-    }
-    }
-   }
-  }
+     stat(dentry->d_name, &estado);
+     if(S_ISDIR(estado.st_mode)){
+          if((strcmp(dentry->d_name, ".") && strcmp(dentry->d_name, ".."))){
+             if((pid[i]=fork()) == 0){
+                 setpgid(getpid(), getpid());
+                 argv[1] = dentry->d_name;
+                 execvp(argv[0], argv);
+                 printf("ERRO NO EXEC\n");
+                 exit(3);
+             }
+             else{
+                i++;
+                if(i>=MAX_DIR){
+                    printf("DEMASIADOS DIRETIRIOS\n");
+                    exit(9);
+                }
+             }
+          }
+     }
  }
 
  rewinddir(dir);
 
-//stat(dentry->d_type,&estado);
 
  while((dentry=readdir(dir))!=NULL){ // VE SE E ESTE E CORRE O COMMANDO
-  stat(dentry->d_name,&estado);
- // printf("ABRIU %s\n",dentry->d_name);
-  if(!strcmp(dentry->d_name, argv[3])){
-	  if(have_to_print == 1)
-     	   printf("%s\n",dentry->d_name);
-  }/*else if(!strcmp(dentry->d_type, argv[3])){
-	  if(have_to_print == 1)
-     	   printf("%s",dentry->d_name);
-//  if((estado.st_mode & S_IWOTH)==S_IWOTH)
-}*/
-}
+    stat(dentry->d_name,&estado);
+        if(!strcmp("-name", argv[2])){
+            if(!strcmp(dentry->d_name, argv[3]))
+                isthat(dentry->d_name,argv);
+        }
+        else if(!strcmp("-type",argv[2])){
+            if(!strcmp(argv[3],"d")){
+                if(S_ISDIR(estado.st_mode))
+                    isthat(dentry->d_name,argv);
+            }
+            else if(!strcmp(argv[3],"f")){
+                if (S_ISREG(estado.st_mode))
+                    isthat(dentry->d_name,argv);
+            }
+            else if(!strcmp(argv[3],"l")){
+                if (S_ISLNK(estado.st_mode))
+                    isthat(dentry->d_name,argv);
+            }
+        }
+        else if(!strcmp("-perm",argv[2])){
 
-//sleep(10);
+        }
+ }
+
 
  while(wait(NULL)!=-1){//TEM FILHOS
   ;
@@ -139,3 +179,4 @@ i=0;
 
  exit(0);
 }
+
