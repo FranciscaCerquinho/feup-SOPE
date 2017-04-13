@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <string.h>
+#include <errno.h>
+#include <limits.h>
 //toupper
 #include <ctype.h>
 #include <xlocale.h>
@@ -20,6 +22,29 @@ int pid[MAX_DIR];
 int have_to_print = 0;
 int have_to_delete = 0;
 int have_to_exec = 0;
+
+static unsigned long parse_ulong(char *str, int base)
+{
+	char *endptr;
+	unsigned long val;
+
+	/* Convert string to unsigned long */
+	val = strtoul(str, &endptr, base);
+
+	/* Check for conversion errors */
+	if ((errno == ERANGE && val == ULONG_MAX) || (errno != 0 && val == 0)) {
+		perror("strtoul");
+		return ULONG_MAX;
+	}
+
+	if (endptr == str) {
+		printf("timer: parse_ulong: no digits were found in %s\n", str);
+		return ULONG_MAX;
+	}
+
+	/* Successful conversion */
+	return val;
+}
 
 int isthat(char * name, char ** argv){
        if(have_to_print == 1){
@@ -150,7 +175,8 @@ if(argc<5){
 
 
  while((dentry=readdir(dir))!=NULL){ // VE SE E ESTE E CORRE O COMMANDO
-    stat(dentry->d_name,&estado);
+        stat(dentry->d_name,&estado);
+        if(strcmp(dentry->d_name, ".") && strcmp(dentry->d_name, "..")){
         if(!strcmp("-name", argv[2])){
             if(!strcmp(dentry->d_name, argv[3]))
                 isthat(dentry->d_name,argv);
@@ -163,17 +189,20 @@ if(argc<5){
             else if(!strcmp(argv[3],"f")){
                 if (S_ISREG(estado.st_mode))
                     isthat(dentry->d_name,argv);
-                    
+
             }
             else if(!strcmp(argv[3],"l")){
                 if (S_ISLNK(estado.st_mode))
                     isthat(dentry->d_name,argv);
             }
         }
-        else if(!strcmp("-perm",argv[2])){
-
+        else {if(!strcmp("-perm",argv[2])){
+                 int perm = parse_ulong(argv[3], 8);
+                 if(perm==(estado.st_mode%512))
+                    isthat(dentry->d_name,argv);
+             }
         }
- }
+ }}
 
 
  while(wait(NULL)!=-1){//TEM FILHOS
