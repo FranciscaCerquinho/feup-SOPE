@@ -15,7 +15,7 @@
 #define WRITE 1
 #define READ 0
 #define MAX_LENGTH 1000
-#define MAX_DIR 100
+#define MAX_DIR 10000
 
 
 int pid[MAX_DIR];
@@ -144,7 +144,7 @@ if(argc<5){
  struct stat estado;
 
  if((dir=opendir(argv[1]))==NULL){
-  printf("Nao consigo abrir o diretório %s",argv[1]);
+  printf("Nao consigo abrir o diretório %s\n",argv[1]);
   exit(2);
  }
 
@@ -213,4 +213,3 @@ if(argc<5){
 
  exit(0);
 }
-
