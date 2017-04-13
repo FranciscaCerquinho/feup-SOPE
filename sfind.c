@@ -46,27 +46,30 @@ static unsigned long parse_ulong(char *str, int base)
 	return val;
 }
 
-int isthat(char * name, char ** argv){
+int isthat(char * name, char ** argv, int argc){
        if(have_to_print == 1){
 	       char actualpath[MAX_LENGTH];
      	   printf("%s\n",realpath(name, actualpath));
-       }else if(have_to_delete == 1){
+       }
+       if(have_to_delete == 1){
          remove(name);
-       }else if(have_to_exec == 1){
-            printf("AQUI");
-            char cmd[MAX_LENGTH];            printf("AQUI");
+       }
+       if(have_to_exec == 1){
+            char cmd[MAX_LENGTH];
             int i=5;
-            strcpy(cmd,argv[i]);            printf("AQUI");
+            strcpy(cmd,argv[i]);
             i++;
-            printf("AQUI");
-            while(strcmp(argv[i],";")){
-                printf("H");
-                strcat(cmd, argv[i]);i++;
+            while(i<(argc-1)){
+                if(!strcmp(argv[i],"{}")){
+                    strcat(cmd, " ");
+                    strcat(cmd,name);
+                }else{
+                     strcat(cmd, " ");
+                     strcat(cmd, argv[i]);
+                }
+                i++;
             }
-            printf("ENTERE\n");
-            printf("|");
-            printf("%s\n",cmd);
-            printf("|");
+            system(cmd);
        }
  return 0;
 }
@@ -77,10 +80,8 @@ void sigint_handler(int signo){
     printf("\nAre you sure you want to terminate (Y/N)?");
     scanf("%c",&r);
     if(r == 'Y' || r=='y'){
-        printf("ENTREI\n");
         int i=0;
         for(;i<MAX_DIR;i++){
-            printf("A");
             if(kill(pid[i], SIGUSR1)==-1){
                 printf("\n");
                 exit(0);
@@ -127,6 +128,7 @@ if(argc<5){
     else
         have_to_exec=0;
 
+//printf("%d%d%d\n",have_to_print,have_to_delete,have_to_exec);
 
  if(signal(SIGINT,sigint_handler) < 0){
    fprintf(stderr, "Unable to install SIGNINT handler\n");
@@ -179,27 +181,27 @@ if(argc<5){
         if(strcmp(dentry->d_name, ".") && strcmp(dentry->d_name, "..")){
         if(!strcmp("-name", argv[2])){
             if(!strcmp(dentry->d_name, argv[3]))
-                isthat(dentry->d_name,argv);
+                isthat(dentry->d_name,argv,argc);
         }
         else if(!strcmp("-type",argv[2])){
             if(!strcmp(argv[3],"d")){
                 if(S_ISDIR(estado.st_mode))
-                    isthat(dentry->d_name,argv);
+                    isthat(dentry->d_name,argv,argc);
             }
             else if(!strcmp(argv[3],"f")){
                 if (S_ISREG(estado.st_mode))
-                    isthat(dentry->d_name,argv);
+                    isthat(dentry->d_name,argv,argc);
 
             }
             else if(!strcmp(argv[3],"l")){
                 if (S_ISLNK(estado.st_mode))
-                    isthat(dentry->d_name,argv);
+                    isthat(dentry->d_name,argv,argc);
             }
         }
         else {if(!strcmp("-perm",argv[2])){
                  int perm = parse_ulong(argv[3], 8);
                  if(perm==(estado.st_mode%512))
-                    isthat(dentry->d_name,argv);
+                    isthat(dentry->d_name,argv,argc);
              }
         }
  }}
