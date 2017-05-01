@@ -80,7 +80,7 @@ int main(int argc, char** argv){
     }
 
     //TODO PROCESSAMENTO
-    char genero;
+    char genero='G';
     struct request recebido[NUM_MAX_CLIENTES];
     pthread_t tid[NUM_MAX_CLIENTES];
     int i=0;
@@ -88,6 +88,7 @@ int main(int argc, char** argv){
         read(fifo_entrada,&(recebido[i]),sizeof(recebido[0]));
         i++;
         //TODO Test gender
+
         sem_wait(&vagas_sem);
         if(vagas>0){
             vagas--;
