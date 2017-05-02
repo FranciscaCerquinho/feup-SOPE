@@ -16,18 +16,25 @@ int readline(int fd, char *str){
 }
 
 int main(int argc, char const *argv[]) {
+  //entrada
+  int fdEnt;
+  char str[9999];
 
-  int fd;
+  fdEnt=open("/tmp/entrada",O_WRONLY);
+
+  //rejeitados
+  int fdRej;
   char str[9999];
 
   mkfifo("/tmp/rejeitados",0660);
-  fd=open("/tmp/rejeitados",O_RDONLY);
+  fdRej=open("/tmp/rejeitados",O_RDONLY);
 
-  while(readline(fd,str)){
+  while(readline(fdRej,str)){
     printf("%s",str);
   }
 
-  close(fd);
+  close(fdRej);
+  close(fdEnt);
 
   return 0;
 }
