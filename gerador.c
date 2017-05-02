@@ -24,7 +24,6 @@ int main(int argc, char const *argv[]) {
 
   //rejeitados
   int fdRej;
-  char str[9999];
 
   mkfifo("/tmp/rejeitados",0660);
   fdRej=open("/tmp/rejeitados",O_RDONLY);
