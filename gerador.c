@@ -19,15 +19,16 @@ int main(int argc, char const *argv[]) {
   //entrada
   int fdEnt;
   char str[9999];
-
+printf("AQUI\n");
   fdEnt=open("/tmp/entrada",O_WRONLY);
-
+printf("AQUI\n");
   //rejeitados
   int fdRej;
 
   mkfifo("/tmp/rejeitados",0660);
+printf("AQUI\n");
   fdRej=open("/tmp/rejeitados",O_RDONLY);
-
+printf("AQUI\n");
   while(readline(fdRej,str)){
     printf("%s",str);
   }
