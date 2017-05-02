@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
@@ -17,6 +18,14 @@ int readline(int fd, char *str){
   return (n>0);
 }
 
+struct request{
+  int serial_number;
+  char gender;
+  int timeReq;
+};
+
+
+
 int main(int argc, char const *argv[]) {
 
   //tratamento dados
@@ -30,21 +39,61 @@ int main(int argc, char const *argv[]) {
   char unTempo=argv[3][0];
 
   //
-  printf("%d %d %c\n", nPedidos,maxUtilizacao,unTempo);
+  printf("nPedidos=%d\nmaxUtilizacao=%d\nunTempo=%c\n", nPedidos,maxUtilizacao,unTempo);
   //
-  
+
   //entrada
   int fdEnt;
   char str[9999];
 
   //
-  printf("AQUI\n");
+  printf("AQUI 1\n");
   //
 
   fdEnt=open("/tmp/entrada",O_WRONLY);
 
+  struct request geradoReq;
+
+  time_t t;
+  srand(&t);
+
+  int cont = 1;
+  int nSerie = 1;
+
+  while (cont<=nPedidos) {
+    char g;
+    int t;
+
+    int auxG= rand() & 1;
+
+    //
+    //printf("Gender= %d\n", auxG);
+    //
+
+    if(auxG==0){
+      g='M';
+    }else{
+      g='F';
+    }
+
+    t= rand() % maxUtilizacao + 1;
+
+    //
+    //printf("time= %d\n", t);
+    //
+
+    geradoReq.serial_number = nSerie;
+    geradoReq.gender = g;
+    geradoReq.timeReq = t;
+
+    write(fdEnt,&geradoReq,sizeof(geradoReq));
+
+    nSerie++;
+    cont++;
+  }
+
   //
-  printf("AQUI\n");
+  printf("AQUI 2 \n");
   //
 
   //rejeitados
@@ -53,7 +102,7 @@ int main(int argc, char const *argv[]) {
   mkfifo("/tmp/rejeitados",0660);
 
   //
-  printf("AQUI\n");
+  printf("AQUI 3\n");
   //
 
   fdRej=open("/tmp/rejeitados",O_RDONLY);
