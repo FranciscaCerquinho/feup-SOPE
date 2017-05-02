@@ -9,7 +9,7 @@
 #include <pthread.h>
 
 #define NUM_CHARS_FILE_NAME 100
-#define NUM_MAX_CLIENTES 100
+#define NUM_MAX_CLIENTES 10000
 
 
 
