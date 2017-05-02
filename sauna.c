@@ -47,11 +47,11 @@ int main(int argc, char** argv){
 
     //TODO nLugares
     if(sem_init(&vagas_sem,0,1)==-1){
-        printf("Erro ao iniciar o semafore\n");
+        printf("Erro ao iniciar o semafore - vagas\n");
         return 1;
     }
     if(sem_init(&testar_sem,0,1)==-1){
-        printf("Erro ao iniciar o semafore\n");
+        printf("Erro ao iniciar o semafore - testar\n");
         return 1;
     }
     int nLugares = atoi(argv[1]);
