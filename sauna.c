@@ -66,12 +66,16 @@ int main(int argc, char** argv){
         printf("Erro ao criar FIFO - /tmp/entrada\n");
         return 1;
     }
+    printf("AQUI\n");
     int fifo_entrada = open("/tmp/entrada",O_RDONLY);//OPEN to WRITE!!
+    printf("AQUI\n");
     if(fifo_entrada == -1){
         printf("Erro ao abrir FIFO - /tmp/entrada\n");
         return 1;
     }
+    printf("AQUI\n");
     int fifo_rejeitados = open("/tmp/rejeitados",O_WRONLY);
+    printf("AQUI\n");
     if(fifo_rejeitados == -1){
         printf("Erro ao abrir FIFO - /tmp/rejeitados\n");
         return 1;
