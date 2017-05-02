@@ -15,7 +15,7 @@
 
 struct request{
  char gender;
- int time;
+ int timeReq;
  int serial_number;
 };
 
