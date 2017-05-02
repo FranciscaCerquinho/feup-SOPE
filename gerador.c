@@ -52,6 +52,30 @@ int main(int argc, char const *argv[]) {
 
   fdEnt=open("/tmp/entrada",O_WRONLY);
 
+   //
+    printf("AQUI 2 \n");
+    //
+
+    //rejeitados
+    int fdRej;
+
+    mkfifo("/tmp/rejeitados",0660);
+
+    //
+    printf("AQUI 3\n");
+    //
+
+    fdRej=open("/tmp/rejeitados",O_RDONLY);
+    if(fdRej==-1){
+      printf("WHY....,.\n");
+      return 1;
+    }
+    //
+    printf("AQUI\n");
+    //
+
+
+
   struct request geradoReq;
 
   time_t t;
@@ -87,36 +111,19 @@ int main(int argc, char const *argv[]) {
     geradoReq.timeReq = t;
 
     write(fdEnt,&geradoReq,sizeof(geradoReq));
-
+    dprintf(STDOUT_FILENO,"inst - %d - %d - %d: %c - %d - SERVIDO\n",getpid(),pthread_self(),geradoReq.serial_number,geradoReq.gender, geradoReq.timeReq);
+        
     nSerie++;
     cont++;
   }
 
-  //
-  printf("AQUI 2 \n");
-  //
-
-  //rejeitados
-  int fdRej;
-
-  mkfifo("/tmp/rejeitados",0660);
-
-  //
-  printf("AQUI 3\n");
-  //
-
-  fdRej=open("/tmp/rejeitados",O_RDONLY);
-
-  //
-  printf("AQUI\n");
-  //
-
-  while(readline(fdRej,str)){
+  /* while(readline(fdRej,str)){
     printf("%s",str);
-  }
+  }*/
 
   close(fdRej);
   close(fdEnt);
+  unlink("/tmp/rejeitados");
 
   return 0;
 }
