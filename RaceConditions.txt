@@ -1,0 +1,8 @@
+Simulação de acesso a recurso partilhado
+
+Turma 3, grupo 1
+
+Anabela Costa e Silva 								| up201506034@fe.up.pt
+Beatriz de Henriques Martins 						| up201502858@fe.up.pt 
+Francisca Leão Cerquinho Ribeiro da Fonseca 		| up201505791@fe.up.pt
+
