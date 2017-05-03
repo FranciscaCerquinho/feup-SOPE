@@ -50,6 +50,7 @@ int main(int argc, char** argv){
     pthread_mutex_unlock(&vagas_sem);
 
     ///TODO  un. tempo
+
     //Criação e abretura de fifos
     if(mkfifo("/tmp/entrada",0660)){
         perror("sauna");
@@ -128,7 +129,6 @@ int main(int argc, char** argv){
              write(fifo_rejeitados,&(recebido[i]),sizeof(recebido[0]));
         }else
         {
-            //TODO VAGAS
             //Se existem vagas, entra na sauna
             while(1){
                 pthread_mutex_lock(&vagas_sem);
@@ -146,13 +146,13 @@ int main(int argc, char** argv){
             i++;
         }
     }
-    //TODO WAIT THEREADS
+    //Espera pela conclusão das threads
     int num_tids=i;
     for(i=0;i<num_tids;i++){
         pthread_join(tid[i],NULL);
     }
-    //TODO STATISTICAS
 
+    //Imprime estatisticas
     pthread_mutex_lock(&testar_sem);
     dprintf(testar,"N. recebidos:\n%d, %d, %d\nN. rejeitados:\n%d, %d, %d\nN. servidos:\n%d, %d, %d\n"
             ,(recebidos_f+recebidos_m),recebidos_f,recebidos_m
