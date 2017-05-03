@@ -1,70 +1,56 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <string.h>
-#include <fcntl.h>
-#include <semaphore.h>
-#include <pthread.h>
+#include "pedido.h"
 
 #define NUM_CHARS_FILE_NAME 100
 #define NUM_MAX_CLIENTES 10000
 
 
-
-struct request{
-  int serial_number;
-  char gender;
-  int timeReq;
-};
-
-
-
+pthread_cond_t no_vagas = PTHREAD_COND_INITIALIZER;
 int vagas;
-sem_t vagas_sem;
+pthread_mutex_t vagas_sem;
 int testar;
-sem_t testar_sem;
+pthread_mutex_t testar_sem;
+int servidos_f=0;
+int servidos_m=0;
+struct timespec ts;
 
 //TODO RECEBEU PEDIDO
 void* processamento_de_pedidos(void* pedido){
     struct request naSauna = *((struct request *) pedido);
     usleep(naSauna.timeReq); //TODO milisegundos
-    sem_wait(&testar_sem);
-    dprintf(testar,"inst - %d - %d - %d: %c - %d - SERVIDO\n",getpid(),pthread_self(),naSauna.serial_number,naSauna.gender, naSauna.timeReq);
-    dprintf(STDOUT_FILENO,"inst - %d - %d - %d: %c - %d - SERVIDO\n",getpid(),pthread_self(),naSauna.serial_number,naSauna.gender, naSauna.timeReq);
-    sem_post(&testar_sem);
-    sem_wait(&vagas_sem);
+    pthread_mutex_lock(&testar_sem);
+    timespec_get(&ts, TIME_UTC);
+    dprintf(testar,"%ld - %d - %ld - %d: %c - %d - SERVIDO\n",ts.tv_nsec,getpid(),pthread_self(),naSauna.serial_number,naSauna.gender, naSauna.timeReq);
+    if(naSauna.gender=='F'){
+        servidos_f++;
+    }else{
+        servidos_m++;
+    }
+    pthread_mutex_unlock(&testar_sem);
+    pthread_mutex_lock(&vagas_sem);
     vagas++;
-    sem_post(&vagas_sem);
+    pthread_cond_broadcast(&no_vagas);
+    pthread_mutex_unlock(&vagas_sem);
     return NULL;
 }
 
 int main(int argc, char** argv){
+    //Validação de variaveis
     if(argc != 3){
         printf("Usage: sauna <n. lugares> <un. tempo>\n");
         return 1;
     }
-
-    //TODO nLugares
-    if(sem_init(&vagas_sem,0,1)==-1){
-        perror("sauna");
-        printf("Erro ao iniciar o semafore - vagas\n");
-        return 1;
-    }
-    if(sem_init(&testar_sem,0,1)==-1){
-        perror("sauna");
-        printf("Erro ao iniciar o semafore - testar\n");
-        return 1;
-    }
+    //Inicialização de mutexes e variaveis de condição
+    pthread_mutex_init(&vagas_sem,NULL);
+    pthread_mutex_init(&testar_sem,NULL);
+    pthread_cond_init(&no_vagas,NULL);
+    //
     int nLugares = atoi(argv[1]);
-    sem_wait(&vagas_sem);
+    pthread_mutex_lock(&vagas_sem);
     vagas=nLugares;
-    sem_post(&vagas_sem);
+    pthread_mutex_unlock(&vagas_sem);
 
     ///TODO  un. tempo
-
-    //TODO FIFOs
+    //Criação e abretura de fifos
     if(mkfifo("/tmp/entrada",0660)){
         perror("sauna");
         printf("Erro ao criar FIFO - /tmp/entrada\n");
@@ -81,41 +67,84 @@ int main(int argc, char** argv){
         fifo_rejeitados= open("/tmp/rejeitados",O_WRONLY);
     }while(fifo_rejeitados==-1);
 
-    //TODO FILE
+    //Criação e abretura de ficheiro de registo
     char nomeFile[NUM_CHARS_FILE_NAME];
     sprintf(nomeFile, "%s%d","/tmp/bal.", getpid());
-    sem_wait(&testar_sem);
+    pthread_mutex_lock(&testar_sem);
     if((testar = open(nomeFile,O_WRONLY | O_CREAT | O_EXCL,0666)) == -1){
         perror("sauna");
-        sem_post(&testar_sem);
+        pthread_mutex_unlock(&testar_sem);
         printf("Erro ao abrir FILE - %s\n",nomeFile);
         return 1;
     }
-    sem_post(&testar_sem);
+    pthread_mutex_unlock(&testar_sem);
+
     //TODO PROCESSAMENTO
+
+    //Processamento dos Pedidos
     char genero='G';
     struct request recebido[NUM_MAX_CLIENTES];
     pthread_t tid[NUM_MAX_CLIENTES];
     int i=0;
-    while(i<NUM_MAX_CLIENTES){
-        if(read(fifo_entrada,&(recebido[i]),sizeof(recebido[0]))==0)break;
-        sem_wait(&testar_sem);
-        dprintf(testar,"inst - %d - %d - %d: %c - %d - RECEBIDO\n",getpid(),pthread_self(),recebido[i].serial_number,recebido[i].gender, recebido[i].timeReq);
-        dprintf(STDOUT_FILENO,"inst - %d - %d - %d: %c - %d - RECEBIDO\n",getpid(),pthread_self(),recebido[i].serial_number,recebido[i].gender, recebido[i].timeReq);
-        sem_post(&testar_sem);
-        //TODO Test gender
+    //Variaveis para as estatisticas
+    int recebidos_f=0;
+    int recebidos_m=0;
+    int rejeitados_f=0;
+    int rejeitados_m=0;
 
-        sem_wait(&vagas_sem);
-        if(vagas>0){
-            vagas--;
-            sem_post(&vagas_sem);
-            pthread_create(&(tid[i]), NULL, &processamento_de_pedidos, &(recebido[i]));
+    while(i<NUM_MAX_CLIENTES){
+        //Recebe pedido
+        if(read(fifo_entrada,&(recebido[i]),sizeof(recebido[0]))==0)break;
+        pthread_mutex_lock(&testar_sem);
+        timespec_get(&ts, TIME_UTC);
+        dprintf(testar,"%ld - %d - %ld - %d: %c - %d - RECEBIDO\n",ts.tv_nsec,getpid(),pthread_self(),recebido[i].serial_number,recebido[i].gender, recebido[i].timeReq);
+        if(recebido[i].gender=='F'){
+            recebidos_f++;
         }else{
-            sem_post(&vagas_sem);
-            dprintf(STDOUT_FILENO,"inst - %d - %d - %d: %c - %d - ERRO\n",getpid(),pthread_self(),recebido[i].serial_number,recebido[i].gender, recebido[i].timeReq);
-            //TODO Same_Gnder NO VAGAS
+            recebidos_m++;
         }
-        i++;
+        pthread_mutex_unlock(&testar_sem);
+
+        //Se ninguem estiver na Sauna, atualiza genero
+        pthread_mutex_lock(&vagas_sem);
+        if(vagas==nLugares){
+            pthread_mutex_unlock(&vagas_sem);
+            genero=recebido[i].gender;
+        }else{
+            pthread_mutex_unlock(&vagas_sem);
+        }
+
+        //Se na sauna estiverem pessoas de outro genero, rejeita
+        if(genero!=recebido[i].gender){
+             pthread_mutex_lock(&testar_sem);
+             timespec_get(&ts, TIME_UTC);
+             dprintf(testar,"%ld - %d - %ld - %d: %c - %d - REJEITADO\n",ts.tv_nsec,getpid(),pthread_self(),recebido[i].serial_number,recebido[i].gender, recebido[i].timeReq);
+             if(recebido[i].gender=='F'){
+                rejeitados_f++;
+             }else{
+                rejeitados_m++;
+             }
+             pthread_mutex_unlock(&testar_sem);
+             write(fifo_rejeitados,&(recebido[i]),sizeof(recebido[0]));
+        }else
+        {
+            //TODO VAGAS
+            //Se existem vagas, entra na sauna
+            while(1){
+                pthread_mutex_lock(&vagas_sem);
+                if(vagas>0){
+                    vagas--;
+                    pthread_mutex_unlock(&vagas_sem);
+                    pthread_create(&(tid[i]), NULL, &processamento_de_pedidos, &(recebido[i]));
+                    break;
+                }else{
+                    //Espera que existam vagas
+                    pthread_cond_wait(&no_vagas,&vagas_sem);
+                    pthread_mutex_unlock(&vagas_sem);
+                }
+            }
+            i++;
+        }
     }
     //TODO WAIT THEREADS
     int num_tids=i;
@@ -124,12 +153,21 @@ int main(int argc, char** argv){
     }
     //TODO STATISTICAS
 
-    //TODO ACABAR variaveis
+    pthread_mutex_lock(&testar_sem);
+    dprintf(testar,"N. recebidos:\n%d, %d, %d\nN. rejeitados:\n%d, %d, %d\nN. servidos:\n%d, %d, %d\n"
+            ,(recebidos_f+recebidos_m),recebidos_f,recebidos_m
+            ,(rejeitados_f+rejeitados_m),rejeitados_f,rejeitados_m
+            ,(servidos_f+servidos_m),servidos_f,servidos_m);
+    pthread_mutex_unlock(&testar_sem);
+
+    //
     close(fifo_rejeitados);
-    sem_wait(&testar_sem);
+    pthread_mutex_lock(&testar_sem);
     close(testar);
-    sem_post(&testar_sem);
-    sem_destroy(&vagas_sem);
+    pthread_mutex_unlock(&testar_sem);
+    pthread_mutex_destroy(&testar_sem);
+    pthread_mutex_destroy(&vagas_sem);
+    pthread_cond_destroy(&no_vagas);
     close(fifo_entrada);
     unlink("/tmp/entrada");
     return 0;
