@@ -8,10 +8,21 @@
 #include <sys/file.h>
 #include <pthread.h>
 
+/*
+ * struct request
+ */
+struct request{
+  int serial_number;
+  char gender;
+  int timeReq;
+  int nRejeitados;
+};
+
+//ver passagem de parametros das threads
+
 void *thr_NewsRequest(void *arg){
   //fifo de entrada
   int fdEnt;
-  char str[9999];
 
   fdEnt = open("/tmp/entrada", O_WRONLY);
 
@@ -62,7 +73,7 @@ void *thr_NewsRequest(void *arg){
 
 void *thr_RejectedRequest(void *arg){
   int fdRej;
-  mkfifo("/tmp/rejeitados",0660);
+  //mkfifo("/tmp/rejeitados",0660);
 
   fdRej=open("/tmp/rejeitados",O_RDONLY);
 
@@ -76,18 +87,6 @@ void *thr_RejectedRequest(void *arg){
   close(fdRej);
   unlink("/tmp/rejeitados");
 }
-
-/*
- * struct request
- */
-struct request{
-  int serial_number;
-  char gender;
-  int timeReq;
-  int nRejeitados;
-};
-
-
 
 int main(int argc, char const *argv[]) {
 
@@ -117,11 +116,15 @@ int main(int argc, char const *argv[]) {
 
   char unTempo = argv[3][0];
 
+  //fifo de rejeitados
+  int fdRej;
+  mkfifo("/tmp/rejeitados",0660);
+
   /*threads*/
   pthread_t newsRequest;
   pthread_t rejectedRequest;
 
-  pthread_create(&newsRequest,NULL,thr_NewsRequest,NULL);
+  pthread_create(&newsRequest,NULL,thr_NewsRequest,&nPedidos);
   pthread_create(&rejectedRequest,NULL,thr_RejectedRequest,NULL);
   /**/
 
@@ -144,12 +147,6 @@ int main(int argc, char const *argv[]) {
   /**/
   //printf("AQUI 2 \n");
   /**/
-
-  //fifo de rejeitados
-  /*
-  int fdRej;
-  mkfifo("/tmp/rejeitados",0660);
-  */
 
   /**/
   //printf("AQUI 3\n");
