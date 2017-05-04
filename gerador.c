@@ -71,6 +71,11 @@ void *thr_NewsRequest(void *arg){
   close(fdEnt);
 }
 
+//função utilizada para processar os pedidos rejeitados
+void processRejectedRequest(&geradoReq){
+
+}
+
 void *thr_RejectedRequest(void *arg){
   int fdRej;
   //mkfifo("/tmp/rejeitados",0660);
@@ -82,7 +87,10 @@ void *thr_RejectedRequest(void *arg){
     return 1;
   }
 
+  while(true){
   read(fdRej,&geradoReq,sizeof(geradoReq));
+  processRejectedRequest(&geradoReq);
+  }
 
   close(fdRej);
   unlink("/tmp/rejeitados");
