@@ -17,18 +17,18 @@ struct request{
 	int serial_number;
 	char gender;
 	int timeReq;
-	int nRejeitados;
+	int nrOfRejects;
 };
 
 //ver passagem de parametros das threads
 
 void *thr_NewsRequest(void *arg){
 	//input fifo
-	int fdEnt;
+	int input_fifo;
 
-	fdEnt = open("/tmp/entrada", O_WRONLY);
+	input_fifo = open("/tmp/entrada", O_WRONLY);
 
-	struct request geradoReq;
+	struct request generatedRequest;
 
 	//assistant of rand
 	srand(time(NULL));
@@ -36,7 +36,7 @@ void *thr_NewsRequest(void *arg){
 	int cont = 1;
 	int nSerie = 1;
 
-	while (cont <= nPedidos) {
+	while (cont <= nrRequest) {
 		char g;
 		int t;
 
@@ -58,39 +58,38 @@ void *thr_NewsRequest(void *arg){
 		//printf("time= %d\n", t);
 		/**/
 
-		geradoReq.serial_number = nSerie;
-		geradoReq.gender = g;
-		geradoReq.timeReq = t;
-		geradoReq.nRejeitados = 0;
+		generatedRequest.serial_number = nSerie;
+		generatedRequest.gender = g;
+		generatedRequest.timeReq = t;
+		generatedRequest.nrOfRejects = 0;
 
-		write(fdEnt, &geradoReq, sizeof(geradoReq));
-
+		write(input_fifo, &generatedRequest, sizeof(generatedRequest));
 
 		nSerie++;
 		cont++;
 	}
 
-	close(fdEnt);
+	close(input_fifo);
 }
 
-//função utilizada para processar os pedidos rejeitados
-void processRejectedRequest(request *geradoReq){
-	//incrementar antes de verificar
-	geradoReq->nRejeitados++;
-	dprintf(STDOUT_FILENO,"inst - %d - %d - %d: %c - %d - REJEITADO\n",getpid(),pthread_self(),geradoReq->serial_number,geradoReq->gender, geradoReq->timeReq);
-	if(geradoReq->nRejeitados==3){
-		dprintf(STDOUT_FILENO,"inst - %d - %d - %d: %c - %d - DESCARTADO\n",getpid(),pthread_self(),geradoReq->serial_number,geradoReq->gender, geradoReq->timeReq);
+//Function used to process rejected orders
+void processRejectedRequest(request *generatedRequest){
+	//Increment before verifying
+	generatedRequest->nrOfRejects++;
+	dprintf(STDOUT_FILENO,"inst - %d - %d - %d: %c - %d - REJEITADO\n",getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
+	if(generatedRequest->nrOfRejects==3){
+		dprintf(STDOUT_FILENO,"inst - %d - %d - %d: %c - %d - DESCARTADO\n",getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
 		return -1;
 	}
 	else
 	{
-		int fdEnt;
+		int input_fifo;
 
-		fdEnt = open("/tmp/entrada", O_WRONLY);
+		input_fifo = open("/tmp/entrada", O_WRONLY);
 
-		write(fdEnt, &geradoReq, sizeof(geradoReq));
-		close(fdEnt);
-		dprintf(STDOUT_FILENO,"inst - %d - %d - %d: %c - %d - PEDIDO\n",getpid(),pthread_self(),geradoReq->serial_number,geradoReq->gender, geradoReq->timeReq);
+		write(input_fifo, &generatedRequest, sizeof(generatedRequest));
+		close(input_fifo);
+		dprintf(STDOUT_FILENO,"inst - %d - %d - %d: %c - %d - PEDIDO\n",getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
 	}
 }
 
@@ -107,8 +106,8 @@ void *thr_RejectedRequest(void *arg){
 	}
 
 	while(true){
-		read(fdRej,&geradoReq,sizeof(geradoReq));
-		processRejectedRequest(&geradoReq);
+		read(fdRej,&generatedRequest,sizeof(generatedRequest));
+		processRejectedRequest(&generatedRequest);
 		//condição para parar de ler os rejeitados?
 
 	}
@@ -119,33 +118,33 @@ void *thr_RejectedRequest(void *arg){
 
 int main(int argc, char const *argv[]) {
 
-	//tratamento dados
+	//Data processing
 	if(argc != 4){
-		printf("Usage: geardor <n. Pedidos> <max. utilizacao> <un. tempo>\n");
+		printf("Usage: geardor <nr. of requests> <max. use> <unit of time>\n");
 		return 1;
 	}
 
-	int nPedidos;
+	int nrOfRequests;
 
 	if(atoi(argv[1]) >= 1){
-		nPedidos = atoi(argv[1]);
+		nrOfRequests = atoi(argv[1]);
 	}else{
-		printf("<n. Pedidos> invalid\n");
+		printf("<nr. of requests> invalid\n");
 		return 1;
 	}
 
-	int maxUtilizacao;
+	int maxUse;
 
 	if(atoi(argv[2]) >= 1){
-		maxUtilizacao = atoi(argv[2]);
+		maxUse = atoi(argv[2]);
 	}else{
-		printf("<max. utilizacao> invalid\n");
+		printf("<max. use> invalid\n");
 		return 1;
 	}
 
-	char unTempo = argv[3][0];
+	char unitOfTime = argv[3][0];
 
-	//fifo de rejeitados
+	//Rejected fifo
 	int fdRej;
 	mkfifo("/tmp/rejeitados",0660);
 
@@ -153,7 +152,7 @@ int main(int argc, char const *argv[]) {
 	pthread_t newsRequest;
 	pthread_t rejectedRequest;
 
-	pthread_create(&newsRequest,NULL,thr_NewsRequest,&nPedidos);
+	pthread_create(&newsRequest,NULL,thr_NewsRequest,&nrOfRequests);
 	pthread_create(&rejectedRequest,NULL,thr_RejectedRequest,NULL);
 	/**/
 
