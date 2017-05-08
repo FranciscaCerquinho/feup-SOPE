@@ -21,7 +21,9 @@ struct request{
 };
 
 //ver passagem de parametros das threads
-
+/**
+ * Thread that performs the random generation of orders
+ */
 void *thr_NewsRequest(void *arg){
 	//input fifo
 	int input_fifo;
@@ -72,7 +74,9 @@ void *thr_NewsRequest(void *arg){
 	close(input_fifo);
 }
 
-//Function used to process rejected orders
+/**
+ * Function used to process rejected orders
+*/
 void processRejectedRequest(request *generatedRequest){
 	//Increment before verifying
 	generatedRequest->nrOfRejects++;
@@ -93,6 +97,9 @@ void processRejectedRequest(request *generatedRequest){
 	}
 }
 
+/**
+ * Thread that checks the rejected requests and places them in the queue of requests
+*/
 void *thr_RejectedRequest(void *arg){
 	int fdRej;
 	//mkfifo("/tmp/rejeitado
