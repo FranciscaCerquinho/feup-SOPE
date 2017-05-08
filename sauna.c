@@ -13,13 +13,12 @@ int servidos_f=0;
 int servidos_m=0;
 struct timespec ts;
 
-//TODO RECEBEU PEDIDO
 void* processamento_de_pedidos(void* pedido){
     struct request naSauna = *((struct request *) pedido);
-    usleep(naSauna.timeReq); //TODO milisegundos
+    usleep(naSauna.timeReq);
     pthread_mutex_lock(&testar_sem);
     timespec_get(&ts, TIME_UTC);
-    dprintf(testar,"%ld - %d - %ld - %d: %c - %d - SERVIDO\n",ts.tv_nsec,getpid(),pthread_self(),naSauna.serial_number,naSauna.gender, naSauna.timeReq);
+    dprintf(testar,"%ld - %d - %ld - %4d: %c - %4d - SERVIDO\n",ts.tv_nsec,getpid(),pthread_self(),naSauna.serial_number,naSauna.gender, naSauna.timeReq);
     if(naSauna.gender=='F'){
         servidos_f++;
     }else{
@@ -35,8 +34,8 @@ void* processamento_de_pedidos(void* pedido){
 
 int main(int argc, char** argv){
     //Validação de variaveis
-    if(argc != 3){
-        printf("Usage: sauna <n. lugares> <un. tempo>\n");
+    if(argc != 2){
+        printf("Usage: sauna <n. lugares>\n");
         return 1;
     }
     //Inicialização de mutexes e variaveis de condição
@@ -48,8 +47,6 @@ int main(int argc, char** argv){
     pthread_mutex_lock(&vagas_sem);
     vagas=nLugares;
     pthread_mutex_unlock(&vagas_sem);
-
-    ///TODO  un. tempo
 
     //Criação e abretura de fifos
     if(mkfifo("/tmp/entrada",0660)){
@@ -98,7 +95,7 @@ int main(int argc, char** argv){
         if(read(fifo_entrada,&(recebido[i]),sizeof(recebido[0]))==0)break;
         pthread_mutex_lock(&testar_sem);
         timespec_get(&ts, TIME_UTC);
-        dprintf(testar,"%ld - %d - %ld - %d: %c - %d - RECEBIDO\n",ts.tv_nsec,getpid(),pthread_self(),recebido[i].serial_number,recebido[i].gender, recebido[i].timeReq);
+        dprintf(testar,"%ld - %d - %ld - %4d: %c - %4d - RECEBIDO\n",ts.tv_nsec,getpid(),pthread_self(),recebido[i].serial_number,recebido[i].gender, recebido[i].timeReq);
         if(recebido[i].gender=='F'){
             recebidos_f++;
         }else{
@@ -119,7 +116,7 @@ int main(int argc, char** argv){
         if(genero!=recebido[i].gender){
              pthread_mutex_lock(&testar_sem);
              timespec_get(&ts, TIME_UTC);
-             dprintf(testar,"%ld - %d - %ld - %d: %c - %d - REJEITADO\n",ts.tv_nsec,getpid(),pthread_self(),recebido[i].serial_number,recebido[i].gender, recebido[i].timeReq);
+             dprintf(testar,"%ld - %d - %ld - %4d: %c - %4d - REJEITADO\n",ts.tv_nsec,getpid(),pthread_self(),recebido[i].serial_number,recebido[i].gender, recebido[i].timeReq);
              if(recebido[i].gender=='F'){
                 rejeitados_f++;
              }else{
@@ -160,7 +157,7 @@ int main(int argc, char** argv){
             ,(servidos_f+servidos_m),servidos_f,servidos_m);
     pthread_mutex_unlock(&testar_sem);
 
-    //
+    //Fechar as variaveis
     close(fifo_rejeitados);
     pthread_mutex_lock(&testar_sem);
     close(testar);
