@@ -10,6 +10,9 @@
 
 #define NUMBER_THREADS 2
 
+int nrOfRequests;
+int maxUse;
+
 struct timespec ts;
 
 /*
@@ -136,16 +139,12 @@ int main(int argc, char const *argv[]) {
 		return 1;
 	}
 
-	int nrOfRequests;
-
 	if(atoi(argv[1]) >= 1){
 		nrOfRequests = atoi(argv[1]);
 	}else{
 		printf("<nr. of requests> invalid\n");
 		return 1;
 	}
-
-	int maxUse;
 
 	if(atoi(argv[2]) >= 1){
 		maxUse = atoi(argv[2]);
