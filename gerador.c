@@ -110,7 +110,7 @@ int processRejectedRequest(struct request *generatedRequest){
                 input_fifo=open("/tmp/entrada", O_WRONLY);
             }while(input_fifo==-1);
 
-		write(input_fifo, &generatedRequest, sizeof(generatedRequest));
+		write(input_fifo, generatedRequest, sizeof(generatedRequest));
 		close(input_fifo);
 		dprintf(STDOUT_FILENO,"inst - %d - %d - %d: %c - %d - PEDIDO\n",getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
 
