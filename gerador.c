@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <pthread.h>
+#include "pedido.h"
 
 #define NUMBER_THREADS 2
 
@@ -17,14 +18,14 @@ struct timespec ts;
 
 /*
  * struct request
- */
+
 struct request{
 	int serial_number;
 	char gender;
 	int timeReq;
 	int nrOfRejects;
 };
-
+*/
 struct thread_data{
 	int numberOfRequests;
 	int maxUse;
@@ -40,7 +41,9 @@ void *thr_NewsRequest(void *thread_arg){
 	int input_fifo;
 
 	printf("aqui abri entradas\n");
-	input_fifo = open("/tmp/entrada", O_WRONLY);
+	    do{
+            input_fifo=open("/tmp/entrada", O_WRONLY);
+        }while(input_fifo==-1);
 
 	printf("aqui struct request\n");
 	struct request generatedRequest;
@@ -103,7 +106,9 @@ int processRejectedRequest(struct request *generatedRequest){
 	}else{
 		int input_fifo;
 
-		input_fifo = open("/tmp/entrada", O_WRONLY);
+		    do{
+                input_fifo=open("/tmp/entrada", O_WRONLY);
+            }while(input_fifo==-1);
 
 		write(input_fifo, &generatedRequest, sizeof(generatedRequest));
 		close(input_fifo);

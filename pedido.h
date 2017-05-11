@@ -8,7 +8,8 @@
 #include <pthread.h>
 
 struct request{
-  int serial_number;
-  char gender;
-  int timeReq;
+	int serial_number;
+	char gender;
+	int timeReq;
+	int nrOfRejects;
 };
