@@ -182,5 +182,5 @@ int main(int argc, char const *argv[]) {
 	pthread_create(&rejectedRequest,NULL,thr_RejectedRequest,NULL);
 	/**/
 
-	return 0;
+	pthread_exit(0);
 }
