@@ -35,11 +35,14 @@ struct thread_data{
  * Thread that performs the random generation of orders
  */
 void *thr_NewsRequest(void *thread_arg){
+	printf("aqui na news threads\n");
 	//input fifo
 	int input_fifo;
 
+	printf("aqui abri entradas\n");
 	input_fifo = open("/tmp/entrada", O_WRONLY);
 
+	printf("aqui struct request\n");
 	struct request generatedRequest;
 	/*
 	struct thread_data *threadData;
@@ -55,7 +58,9 @@ void *thr_NewsRequest(void *thread_arg){
 	int cont = 1;
 	int nSerie = 1;
 
+	printf("aqui antes ciclo while\n");
 	while (cont <= nrOfRequests) {
+		printf("aqui dentro ciclo\n");
 		char g;
 		int t;
 
@@ -80,6 +85,7 @@ void *thr_NewsRequest(void *thread_arg){
 		cont++;
 	}
 
+	printf("aqui antes de fechar\n");
 	close(input_fifo);
 }
 
