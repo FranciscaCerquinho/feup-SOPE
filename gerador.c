@@ -41,11 +41,13 @@ void *thr_NewsRequest(void *thread_arg){
 	input_fifo = open("/tmp/entrada", O_WRONLY);
 
 	struct request generatedRequest;
+	/*
 	struct thread_data *threadData;
 
 	threadData = (struct thread_data*)thread_arg;
 	int nmbOfRequests = threadData->numberOfRequests;
 	int maxUsage = threadData->maxUse;
+	*/
 
 	//assistant of rand
 	srand(time(NULL));
@@ -53,7 +55,7 @@ void *thr_NewsRequest(void *thread_arg){
 	int cont = 1;
 	int nSerie = 1;
 
-	while (cont <= nmbOfRequests) {
+	while (cont <= nrOfRequests) {
 		char g;
 		int t;
 
@@ -65,7 +67,7 @@ void *thr_NewsRequest(void *thread_arg){
 			g = 'F';
 		}
 
-		t = rand() % maxUsage + 1;
+		t = rand() % maxUse + 1;
 
 		generatedRequest.serial_number = nSerie;
 		generatedRequest.gender = g;
@@ -120,7 +122,7 @@ void *thr_RejectedRequest(void *arg){
 
 	int processAnswer = 0;
 
-	while(true){
+	while(processAnswer == 0){
 		read(fdRej,&generatedRequest,sizeof(generatedRequest));
 		processAnswer = processRejectedRequest(&generatedRequest);
 		//condição para parar de ler os rejeitados?
@@ -159,16 +161,18 @@ int main(int argc, char const *argv[]) {
 	int fdRej;
 	mkfifo("/tmp/rejeitados",0660);
 
+	/*
 	thread_data threadData;
 	threadData.numberOfRequests = nrOfRequests;
 	threadData.maxUse = maxUse;
+	*/
 
 	/*threads*/
 	pthread_t newsRequest;
 	pthread_t rejectedRequest;
 
 	pthread_create(&newsRequest,NULL,thr_NewsRequest,(void*)&threadData);
-	pthread_create(&rejectedRequest,NULL,thr_RejectedRequest,&threadData);
+	pthread_create(&rejectedRequest,NULL,thr_RejectedRequest,(void*)&threadData);
 	/**/
 
 	return 0;
