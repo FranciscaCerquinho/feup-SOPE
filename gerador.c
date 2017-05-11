@@ -122,11 +122,12 @@ void *thr_RejectedRequest(void *arg){
 
 	int processAnswer = 0;
 
-	while(processAnswer == 0){
-		read(fdRej,&generatedRequest,sizeof(generatedRequest));
+	struct request generatedRequest;
+
+	while(read(fdRej,&generatedRequest,sizeof(generatedRequest)) != 0){
+		//read(fdRej,&generatedRequest,sizeof(generatedRequest));
 		processAnswer = processRejectedRequest(&generatedRequest);
 		//condição para parar de ler os rejeitados?
-
 	}
 
 	close(fdRej);
@@ -171,8 +172,8 @@ int main(int argc, char const *argv[]) {
 	pthread_t newsRequest;
 	pthread_t rejectedRequest;
 
-	pthread_create(&newsRequest,NULL,thr_NewsRequest,(void*)&threadData);
-	pthread_create(&rejectedRequest,NULL,thr_RejectedRequest,(void*)&threadData);
+	pthread_create(&newsRequest,NULL,thr_NewsRequest,NULL);
+	pthread_create(&rejectedRequest,NULL,thr_RejectedRequest,NULL);
 	/**/
 
 	return 0;
