@@ -162,17 +162,17 @@ int main(int argc, char const *argv[]) {
 	int fdRej;
 	mkfifo("/tmp/rejeitados",0660);
 
-	/*
-	thread_data threadData;
-	threadData.numberOfRequests = nrOfRequests;
-	threadData.maxUse = maxUse;
-	*/
+	printf("aqui no main\n");
 
 	/*threads*/
+	printf("aqui nas threads\n");
 	pthread_t newsRequest;
 	pthread_t rejectedRequest;
 
+	printf("aqui criei thread novos\n");
 	pthread_create(&newsRequest,NULL,thr_NewsRequest,NULL);
+
+	printf("aqui threads rejeitados\n");
 	pthread_create(&rejectedRequest,NULL,thr_RejectedRequest,NULL);
 	/**/
 
