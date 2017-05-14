@@ -73,6 +73,8 @@ void *thr_NewsRequest(void *thread_arg){
 		generatedRequest.nrOfRejects = 0;
 
 		write(input_fifo, &generatedRequest, sizeof(generatedRequest));
+        timespec_get(&ts, TIME_UTC);
+		dprintf(record,"%8.2f - %ul - %ld - %4d: %c - %4d - PEDIDO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest.serial_number,generatedRequest.gender, generatedRequest.timeReq);
 
 		nSerie++;
 		cont++;
