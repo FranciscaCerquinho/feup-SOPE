@@ -14,8 +14,8 @@
 
 int nrOfRequests;
 int maxUse;
-pthread_mutex_t testar_sem;
-int testar;
+pthread_mutex_t record_sem;
+int record;
 struct timespec ts;
 struct timespec tInitial;
 int generated_m = 0;
@@ -96,7 +96,7 @@ int processRejectedRequest(struct request *generatedRequest){
 	generatedRequest->nrOfRejects= generatedRequest->nrOfRejects+1;
 
 	timespec_get(&ts, TIME_UTC);
-	dprintf(testar,"%8.2f - %ul - %ld - %4d: %c - %4d - REJEITADO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
+	dprintf(record,"%8.2f - %ul - %ld - %4d: %c - %4d - REJEITADO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
 	if(generatedRequest->gender== 'M')
 		rejected_m++;
 	else
@@ -104,7 +104,7 @@ int processRejectedRequest(struct request *generatedRequest){
 
 	if(generatedRequest->nrOfRejects==3){
 		timespec_get(&ts, TIME_UTC);
-		dprintf(testar,"%8.2f - %ul - %ld - %4d: %c - %4d - DESCARTADO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
+		dprintf(record,"%8.2f - %ul - %ld - %4d: %c - %4d - DESCARTADO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
 		if(generatedRequest->gender=='M')
 			discarded_m++;
 		else
@@ -116,7 +116,7 @@ int processRejectedRequest(struct request *generatedRequest){
 		write(input_fifo, generatedRequest, sizeof(*generatedRequest));
 		close(input_fifo);
 		timespec_get(&ts, TIME_UTC);
-		dprintf(testar,"%8.2f - %ul - %ld - %4d: %c - %4d - PEDIDO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
+		dprintf(record,"%8.2f - %ul - %ld - %4d: %c - %4d - PEDIDO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
 		return 0;
 	}
 }
@@ -136,21 +136,21 @@ void *thr_RejectedRequest(void *arg){
 	struct request generatedRequest;
 
 	while(read(fdRej,&generatedRequest,sizeof(generatedRequest)) != 0){
-		//read(fdRej,&generatedRequest,sizeof(generatedRequest));
+
 		processAnswer = processRejectedRequest(&generatedRequest);
-		//condição para parar de ler os rejeitados?
+
 	}
 
 	close(fdRej);
 	unlink("/tmp/rejeitados");
 
-	//Imprime estatisticas
-	pthread_mutex_lock(&testar_sem);
+    //Print statistics
+	pthread_mutex_lock(&record_sem);
 	dprintf(STDOUT_FILENO,"N. gerados:\n%d, %d, %d\nN. rejeitados:\n%d, %d, %d\nN. descartados:\n%d, %d, %d\n"
 			,(generated_f+generated_m),generated_f,generated_m
 			,(rejected_f+rejected_m),rejected_f,rejected_m
 			,(discarded_f+discarded_m),discarded_f,discarded_m);
-	pthread_mutex_unlock(&testar_sem);
+	pthread_mutex_unlock(&record_sem);
 
 	return NULL;
 }
@@ -181,14 +181,14 @@ int main(int argc, char const *argv[]) {
 	//Criação e abretura de ficheiro de registo
 	char nomeFile[NUM_CHARS_FILE_NAME];
 	sprintf(nomeFile, "%s%d","/tmp/ger.", getpid());
-	pthread_mutex_lock(&testar_sem);
-	if((testar = open(nomeFile,O_WRONLY | O_CREAT | O_EXCL,0666)) == -1){
+	pthread_mutex_lock(&record_sem);
+	if((record = open(nomeFile,O_WRONLY | O_CREAT | O_EXCL,0666)) == -1){
 		perror("gerador");
-		pthread_mutex_unlock(&testar_sem);
+		pthread_mutex_unlock(&record_sem);
 		printf("Erro ao abrir FILE - %s\n",nomeFile);
 		return 1;
 	}
-	pthread_mutex_unlock(&testar_sem);
+	pthread_mutex_unlock(&record_sem);
 
 	/*threads*/
 	pthread_t newsRequest;
