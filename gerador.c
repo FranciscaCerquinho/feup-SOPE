@@ -79,6 +79,8 @@ void *thr_NewsRequest(void *thread_arg){
 	}
 
 	close(input_fifo);
+
+	return NULL;
 }
 
 /**
@@ -94,7 +96,7 @@ int processRejectedRequest(struct request *generatedRequest){
 	generatedRequest->nrOfRejects= generatedRequest->nrOfRejects+1;
 
 	timespec_get(&ts, TIME_UTC);
-	dprintf(testar,"%8.2f - %d - %d - %4d: %c - %4d - REJEITADO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
+	dprintf(testar,"%8.2f - %ul - %ld - %4d: %c - %4d - REJEITADO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
 	if(generatedRequest->gender== 'M')
 		rejected_m++;
 	else
@@ -102,7 +104,7 @@ int processRejectedRequest(struct request *generatedRequest){
 
 	if(generatedRequest->nrOfRejects==3){
 		timespec_get(&ts, TIME_UTC);
-		dprintf(testar,"%8.2f - %d - %d - %4d: %c - %4d - DESCARTADO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
+		dprintf(testar,"%8.2f - %ul - %ld - %4d: %c - %4d - DESCARTADO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
 		if(generatedRequest->gender=='M')
 			discarded_m++;
 		else
@@ -114,7 +116,7 @@ int processRejectedRequest(struct request *generatedRequest){
 		write(input_fifo, generatedRequest, sizeof(*generatedRequest));
 		close(input_fifo);
 		timespec_get(&ts, TIME_UTC);
-		dprintf(testar,"%8.2f - %d - %d - %4d: %c - %4d - PEDIDO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
+		dprintf(testar,"%8.2f - %ul - %ld - %4d: %c - %4d - PEDIDO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
 		return 0;
 	}
 }
@@ -123,15 +125,13 @@ int processRejectedRequest(struct request *generatedRequest){
  * Thread that checks the rejected requests and places them in the queue of requests
  */
 void *thr_RejectedRequest(void *arg){
-	int fdRej;
+	int fdRej, processAnswer;
 
 	fdRej=open("/tmp/rejeitados",O_RDONLY);
 
 	if(fdRej == -1){
-		return 1;
+		return (void*)1;
 	}
-
-	int processAnswer = 0;
 
 	struct request generatedRequest;
 
@@ -151,6 +151,8 @@ void *thr_RejectedRequest(void *arg){
 			,(rejected_f+rejected_m),rejected_f,rejected_m
 			,(discarded_f+discarded_m),discarded_f,discarded_m);
 	pthread_mutex_unlock(&testar_sem);
+
+	return NULL;
 }
 
 int main(int argc, char const *argv[]) {
@@ -173,7 +175,7 @@ int main(int argc, char const *argv[]) {
 	}
 
 	//Rejected fifo
-	int fdRej;
+
 	mkfifo("/tmp/rejeitados",0660);
 
 	//Criação e abretura de ficheiro de registo
