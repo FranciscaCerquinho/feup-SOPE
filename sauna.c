@@ -13,7 +13,9 @@ int served_f=0;
 int served_m=0;
 struct timespec ts;
 struct timespec tInitial;
-
+/**
+ * Thread that waits for the conclusion of the use of the sauna for each request
+ */
 void* order_processing(void* pedido){
     struct request inSauna = *((struct request *) pedido);
     usleep(inSauna.timeReq*1000);
