@@ -16,16 +16,7 @@ int maxUse;
 
 struct timespec ts;
 
-/*
- * struct request
 
-struct request{
-	int serial_number;
-	char gender;
-	int timeReq;
-	int nrOfRejects;
-};
-*/
 struct thread_data{
 	int numberOfRequests;
 	int maxUse;
@@ -36,24 +27,15 @@ struct thread_data{
  * Thread that performs the random generation of orders
  */
 void *thr_NewsRequest(void *thread_arg){
-	printf("aqui na news threads\n");
 	//input fifo
 	int input_fifo;
 
-	printf("aqui abri entradas\n");
-	    do{
-            input_fifo=open("/tmp/entrada", O_WRONLY);
-        }while(input_fifo==-1);
+	do{
+        input_fifo=open("/tmp/entrada", O_WRONLY);
+    }while(input_fifo==-1);
 
-	printf("aqui struct request\n");
 	struct request generatedRequest;
-	/*
-	struct thread_data *threadData;
 
-	threadData = (struct thread_data*)thread_arg;
-	int nmbOfRequests = threadData->numberOfRequests;
-	int maxUsage = threadData->maxUse;
-	*/
 
 	//assistant of rand
 	srand(time(NULL));
@@ -61,9 +43,7 @@ void *thr_NewsRequest(void *thread_arg){
 	int cont = 1;
 	int nSerie = 1;
 
-	printf("aqui antes ciclo while\n");
 	while (cont <= nrOfRequests) {
-		printf("aqui dentro ciclo\n");
 		char g;
 		int t;
 
@@ -88,29 +68,28 @@ void *thr_NewsRequest(void *thread_arg){
 		cont++;
 	}
 
-	printf("aqui antes de fechar\n");
 	close(input_fifo);
 }
 
 /**
  * Function used to process rejected orders
 */
-//void processRejectedRequest(struct request *generatedRequest){
+
 int processRejectedRequest(struct request *generatedRequest){
+    int input_fifo;
+    do{
+        input_fifo=open("/tmp/entrada", O_WRONLY);
+    }while(input_fifo==-1);
 	//Increment before verifying
-	generatedRequest->nrOfRejects++;
+	generatedRequest->nrOfRejects= generatedRequest->nrOfRejects+1;
+	printf("%d\n",generatedRequest->nrOfRejects);
 	dprintf(STDOUT_FILENO,"inst - %d - %d - %d: %c - %d - REJEITADO\n",getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
 	if(generatedRequest->nrOfRejects==3){
 		dprintf(STDOUT_FILENO,"inst - %d - %d - %d: %c - %d - DESCARTADO\n",getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
+		close(input_fifo);
 		return -1;
 	}else{
-		int input_fifo;
-
-		    do{
-                input_fifo=open("/tmp/entrada", O_WRONLY);
-            }while(input_fifo==-1);
-
-		write(input_fifo, generatedRequest, sizeof(generatedRequest));
+        write(input_fifo, generatedRequest, sizeof(*generatedRequest));
 		close(input_fifo);
 		dprintf(STDOUT_FILENO,"inst - %d - %d - %d: %c - %d - PEDIDO\n",getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
 
@@ -127,7 +106,6 @@ void *thr_RejectedRequest(void *arg){
 	fdRej=open("/tmp/rejeitados",O_RDONLY);
 
 	if(fdRej == -1){
-		printf("WHY...\n");
 		return 1;
 	}
 
@@ -148,42 +126,33 @@ void *thr_RejectedRequest(void *arg){
 int main(int argc, char const *argv[]) {
 
 	//Data processing
-	if(argc != 4){
-		printf("Usage: geardor <nr. of requests> <max. use> <unit of time>\n");
+	if(argc != 3){
 		return 1;
 	}
 
 	if(atoi(argv[1]) >= 1){
 		nrOfRequests = atoi(argv[1]);
 	}else{
-		printf("<nr. of requests> invalid\n");
 		return 1;
 	}
 
 	if(atoi(argv[2]) >= 1){
 		maxUse = atoi(argv[2]);
 	}else{
-		printf("<max. use> invalid\n");
 		return 1;
 	}
-
-	char unitOfTime = argv[3][0];
 
 	//Rejected fifo
 	int fdRej;
 	mkfifo("/tmp/rejeitados",0660);
 
-	printf("aqui no main\n");
 
 	/*threads*/
-	printf("aqui nas threads\n");
 	pthread_t newsRequest;
 	pthread_t rejectedRequest;
 
-	printf("aqui criei thread novos\n");
 	pthread_create(&newsRequest,NULL,thr_NewsRequest,NULL);
 
-	printf("aqui threads rejeitados\n");
 	pthread_create(&rejectedRequest,NULL,thr_RejectedRequest,NULL);
 	/**/
 
