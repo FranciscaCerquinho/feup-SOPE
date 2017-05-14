@@ -17,6 +17,7 @@ int maxUse;
 pthread_mutex_t testar_sem;
 int testar;
 struct timespec ts;
+struct timespec tInitial;
 int generated_m = 0;
 int generated_f = 0;
 int rejected_m  = 0;
@@ -40,6 +41,7 @@ void *thr_NewsRequest(void *thread_arg){
 		input_fifo=open("/tmp/entrada", O_WRONLY);
 	}while(input_fifo==-1);
 
+	timespec_get(&tInitial, TIME_UTC);
 	struct request generatedRequest;
 
 
@@ -92,7 +94,7 @@ int processRejectedRequest(struct request *generatedRequest){
 	generatedRequest->nrOfRejects= generatedRequest->nrOfRejects+1;
 
 	timespec_get(&ts, TIME_UTC);
-	dprintf(testar,"%ld  - %d - %d - %d: %c - %d - REJEITADO\n",ts.tv_nsec,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
+	dprintf(testar,"%8.2f - %d - %d - %4d: %c - %4d - REJEITADO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
 	if(generatedRequest->gender== 'M')
 		rejected_m++;
 	else
@@ -100,7 +102,7 @@ int processRejectedRequest(struct request *generatedRequest){
 
 	if(generatedRequest->nrOfRejects==3){
 		timespec_get(&ts, TIME_UTC);
-		dprintf(testar,"%ld - %d - %d - %d: %c - %d - DESCARTADO\n",ts.tv_nsec,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
+		dprintf(testar,"%8.2f - %d - %d - %4d: %c - %4d - DESCARTADO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
 		if(generatedRequest->gender=='M')
 			discarded_m++;
 		else
@@ -112,7 +114,7 @@ int processRejectedRequest(struct request *generatedRequest){
 		write(input_fifo, generatedRequest, sizeof(*generatedRequest));
 		close(input_fifo);
 		timespec_get(&ts, TIME_UTC);
-		dprintf(testar,"%ld - %d - %d - %d: %c - %d - PEDIDO\n",ts.tv_nsec,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
+		dprintf(testar,"%8.2f - %d - %d - %4d: %c - %4d - PEDIDO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
 		return 0;
 	}
 }
