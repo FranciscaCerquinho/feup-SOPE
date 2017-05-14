@@ -8,3 +8,9 @@ Francisca Leão Cerquinho Ribeiro da Fonseca 		| up201505791@fe.up.pt
 
 
 	No que diz respeito ao programa gerador, foram criadas duas threads através da main em que uma delas gera os dados de entrada e a outra trata os dados rejeitados pela sauna. Como forma de evitar as situações de competição no acesso a elementos partilhados utilizamos mutex's para controlar esse acesso.
+
+
+
+	No programa sauna, foram criados dois mutex's para controlar o acesso as variaveis globais,
+assim como uma variavel de condição para as threads que esperam pela conclusão do uso da sauna
+avisem a pricipal de uma nova vaga.
