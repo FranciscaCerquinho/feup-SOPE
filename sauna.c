@@ -150,7 +150,7 @@ int main(int argc, char** argv){
 
     //Imprime estatisticas
     pthread_mutex_lock(&testar_sem);
-    dprintf(testar,"N. recebidos:\n%d, %d, %d\nN. rejeitados:\n%d, %d, %d\nN. servidos:\n%d, %d, %d\n"
+    dprintf(STDOUT_FILENO,"N. recebidos:\n%d, %d, %d\nN. rejeitados:\n%d, %d, %d\nN. servidos:\n%d, %d, %d\n"
             ,(recebidos_f+recebidos_m),recebidos_f,recebidos_m
             ,(rejeitados_f+rejeitados_m),rejeitados_f,rejeitados_m
             ,(servidos_f+servidos_m),servidos_f,servidos_m);
