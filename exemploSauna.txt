@@ -1,0 +1,11 @@
+Exemplo de uma Sauna:
+
+Sauna com 100 lugares:
+
+ recebidos:
+16671, 7558, 9113
+N. rejeitados:
+7051, 2595, 4456
+N. servidos:
+9620, 4963, 4657
+

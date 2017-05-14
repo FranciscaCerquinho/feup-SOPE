@@ -1,0 +1,11 @@
+Exemplo de Gerador:
+
+Gerador com 1000 pedidos num tempo máximo de 307ms:
+
+N. gerados:
+10000, 5066, 4934
+N. rejeitados:
+7051, 2595, 4456
+N. descartados:
+380, 103, 277
+
