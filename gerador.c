@@ -12,12 +12,15 @@
 #define NUM_CHARS_FILE_NAME 100
 #define NUMBER_THREADS 2
 
+//Order Processing
 int nrOfRequests;
 int maxUse;
 pthread_mutex_t record_sem;
 int record;
 struct timespec ts;
 struct timespec tInitial;
+
+//Variables for statistics
 int generated_m = 0;
 int generated_f = 0;
 int rejected_m  = 0;
@@ -51,6 +54,7 @@ void *thr_NewsRequest(void *thread_arg){
 	int cont = 1;
 	int nSerie = 1;
 
+	//Randomly generate gender
 	while (cont <= nrOfRequests) {
 		char g;
 		int t;
@@ -65,15 +69,17 @@ void *thr_NewsRequest(void *thread_arg){
 			generated_f++;
 		}
 
+		//Randomly generate order time
 		t = rand() % maxUse + 1;
 
+		//Create the order and save to the structure "generatedRequest"
 		generatedRequest.serial_number = nSerie;
 		generatedRequest.gender = g;
 		generatedRequest.timeReq = t;
 		generatedRequest.nrOfRejects = 0;
 
 		write(input_fifo, &generatedRequest, sizeof(generatedRequest));
-        timespec_get(&ts, TIME_UTC);
+		timespec_get(&ts, TIME_UTC);
 		dprintf(record,"%8.2f - %ul - %ld - %4d: %c - %4d - PEDIDO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest.serial_number,generatedRequest.gender, generatedRequest.timeReq);
 
 		nSerie++;
@@ -88,8 +94,7 @@ void *thr_NewsRequest(void *thread_arg){
 /**
  * Function used to process rejected orders
  */
-
-int processRejectedRequest(struct request *generatedRequest){
+void processRejectedRequest(struct request *generatedRequest){
 	int input_fifo;
 	do{
 		input_fifo=open("/tmp/entrada", O_WRONLY);
@@ -98,28 +103,29 @@ int processRejectedRequest(struct request *generatedRequest){
 	generatedRequest->nrOfRejects= generatedRequest->nrOfRejects+1;
 
 	timespec_get(&ts, TIME_UTC);
-	dprintf(record,"%8.2f - %ul - %ld - %4d: %c - %4d - REJEITADO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
+	dprintf(record,"%8.2f - %u - %ld - %4d: %c - %4d - REJEITADO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
 	if(generatedRequest->gender== 'M')
 		rejected_m++;
 	else
 		rejected_f++;
 
+	//If the number of requests is 3 the request is discarded
 	if(generatedRequest->nrOfRejects==3){
 		timespec_get(&ts, TIME_UTC);
-		dprintf(record,"%8.2f - %ul - %ld - %4d: %c - %4d - DESCARTADO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
+		dprintf(record,"%8.2f - %u - %ld - %4d: %c - %4d - DESCARTADO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
 		if(generatedRequest->gender=='M')
 			discarded_m++;
 		else
 			discarded_f++;
 		close(input_fifo);
-		return -1;
+		return;
 	}
 	else{
 		write(input_fifo, generatedRequest, sizeof(*generatedRequest));
 		close(input_fifo);
 		timespec_get(&ts, TIME_UTC);
-		dprintf(record,"%8.2f - %ul - %ld - %4d: %c - %4d - PEDIDO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
-		return 0;
+		dprintf(record,"%8.2f - %u - %ld - %4d: %c - %4d - PEDIDO\n",(ts.tv_sec - tInitial.tv_sec)*1000+(ts.tv_nsec - tInitial.tv_nsec)*0.000001,getpid(),pthread_self(),generatedRequest->serial_number,generatedRequest->gender, generatedRequest->timeReq);
+		return;
 	}
 }
 
@@ -127,7 +133,7 @@ int processRejectedRequest(struct request *generatedRequest){
  * Thread that checks the rejected requests and places them in the queue of requests
  */
 void *thr_RejectedRequest(void *arg){
-	int fdRej, processAnswer;
+	int fdRej;
 
 	fdRej=open("/tmp/rejeitados",O_RDONLY);
 
@@ -137,16 +143,15 @@ void *thr_RejectedRequest(void *arg){
 
 	struct request generatedRequest;
 
+	//While can read a request, update generatedRequest and processes it
 	while(read(fdRej,&generatedRequest,sizeof(generatedRequest)) != 0){
-
-		processAnswer = processRejectedRequest(&generatedRequest);
-
+		processRejectedRequest(&generatedRequest);
 	}
 
 	close(fdRej);
 	unlink("/tmp/rejeitados");
 
-    //Print statistics
+	//Print statistics
 	pthread_mutex_lock(&record_sem);
 	dprintf(STDOUT_FILENO,"N. gerados:\n%d, %d, %d\nN. rejeitados:\n%d, %d, %d\nN. descartados:\n%d, %d, %d\n"
 			,(generated_f+generated_m),generated_f,generated_m
