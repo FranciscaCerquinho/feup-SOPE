@@ -180,14 +180,14 @@ int main(int argc, char const *argv[]) {
 
 	mkfifo("/tmp/rejeitados",0660);
 
-	//Criação e abretura de ficheiro de registo
-	char nomeFile[NUM_CHARS_FILE_NAME];
-	sprintf(nomeFile, "%s%d","/tmp/ger.", getpid());
+	//Creation and opening of log file
+	char nameFile[NUM_CHARS_FILE_NAME];
+	sprintf(nameFile, "%s%d","/tmp/ger.", getpid());
 	pthread_mutex_lock(&record_sem);
-	if((record = open(nomeFile,O_WRONLY | O_CREAT | O_EXCL,0666)) == -1){
+	if((record = open(nameFile,O_WRONLY | O_CREAT | O_EXCL,0666)) == -1){
 		perror("gerador");
 		pthread_mutex_unlock(&record_sem);
-		printf("Erro ao abrir FILE - %s\n",nomeFile);
+		printf("Erro ao abrir FILE - %s\n",nameFile);
 		return 1;
 	}
 	pthread_mutex_unlock(&record_sem);
