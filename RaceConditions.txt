@@ -14,4 +14,5 @@ para controlar esse acesso.
 
 
 	No programa sauna, foram criados dois mutex's para controlar o acesso às variáveis globais,
-assim como uma variável de condição para as threads, que esperam pela conclusão do uso da sauna, avisarem a principal de uma nova vaga.
+assim como uma variável de condição para as threads, que esperam pela conclusão do uso da sauna,
+ avisarem a principal de uma nova vaga.
