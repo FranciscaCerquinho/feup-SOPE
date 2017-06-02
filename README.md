@@ -2,14 +2,15 @@
 
 ## SISTEMAS OPERATIVOS
 
-- Desenvolvimento de um programa de simulação de acesso a um recurso partilhado.
+### Desenvolvimento de um programa de simulação de acesso a um recurso partilhado.
 
   O recurso é uma Sauna unisexo e o programa será uma simulação informática da sua utilização.
 O acesso à sauna é controlado um processo que atende pedidos identificados pelo género do cliente e pelo
-tempo estimado de duração da ocupação. A sauna tem um certo número de lugares disponíveis, que só
+tempo estimado de duração da ocupação. 
+  A sauna tem um certo número de lugares disponíveis, que só
 podem ser ocupados por clientes do mesmo género. Após a admissão de um utilizador à sauna, o programa
 controla-lhe o tempo de utilização, libertando depois o lugar para outro utilizador.
-A simulação de pedidos é efectuada por um programa gerador que sucessivamente emite pedidos
+  A simulação de pedidos é efectuada por um programa gerador que sucessivamente emite pedidos
 caracterizados por um género e por um tempo de ocupação, ambos gerados aleatoriamente. No caso em
 que um pedido de acesso não pode ser satisfeito de imediato – por exemplo quando o pedido for masculino,
 M, e todos os lugares da sauna estiverem ocupados por utilizadores femininos, F –, o pedido é rejeitado e
